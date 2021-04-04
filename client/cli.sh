@@ -1,4 +1,4 @@
 #!/bin/sh
 
 go build cli.go
-./cli -name=.* -path=/temp/
+./cli -name=.* -path=/tmp/
