@@ -31,28 +31,32 @@ func main() {
 	requestParamObject.Name = *regexPtr
 	requestParamObject.Path = *pathPtr
 
+	//encode requestParamObject to a JSON string
 	requestBytes, _ := json.Marshal(requestParamObject)
 
 	url := "http://localhost:8080/hello"
 
+	//for control over HTTP client headers, create a Client
+	client := &http.Client{}
+	// making http post request to server with our json data
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBytes))
 	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
+	//client must close the response body when finished with it
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
+	// fmt.Println("response Status:", resp.Status)
+	// fmt.Println("response Headers:", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
-	// fmt.Println("response Body:", string(body))
 
 	var dataObject response_filenames
+	// to convert json data back into our array of struct before printing it out
 	err = json.Unmarshal(body, &dataObject)
 	result1 := strings.Join(dataObject.Data, "\n")
-	fmt.Println("response Body:", result1)
+	// fmt.Println("response Body:", result1)
+	fmt.Println(result1)
 
 }
