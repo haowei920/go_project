@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -32,9 +33,12 @@ func main() {
 	requestParamObject.Path = *pathPtr
 
 	//encode requestParamObject to a JSON string
-	requestBytes, _ := json.Marshal(requestParamObject)
+	requestBytes, err := json.Marshal(requestParamObject)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	url := "http://localhost:8080/hello"
+	url := "http://localhost:8080/find-file"
 
 	//for control over HTTP client headers, create a Client
 	client := &http.Client{}
@@ -44,19 +48,23 @@ func main() {
 	//client must close the response body when finished with it
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode == http.StatusOK {
 
-	// fmt.Println("response Status:", resp.Status)
-	// fmt.Println("response Headers:", resp.Header)
-	body, _ := ioutil.ReadAll(resp.Body)
+		var dataObject response_filenames
+		// to convert json data back into our array of struct before printing it out
+		err = json.Unmarshal(body, &dataObject)
+		result1 := strings.Join(dataObject.Data, "\n")
+		fmt.Println(result1)
+	} else {
+		log.Fatalf("Bad status code %d received: %s", resp.StatusCode, string(body))
 
-	var dataObject response_filenames
-	// to convert json data back into our array of struct before printing it out
-	err = json.Unmarshal(body, &dataObject)
-	result1 := strings.Join(dataObject.Data, "\n")
-	// fmt.Println("response Body:", result1)
-	fmt.Println(result1)
+	}
 
 }

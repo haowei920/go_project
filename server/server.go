@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,7 +22,8 @@ type response_filenames struct {
 
 func main() {
 	//tells http packaeg to handle all requests to /hello with HandleRequest
-	http.HandleFunc("/hello", HandleRequest)
+
+	http.HandleFunc("/find-file", HandleRequest)
 	//listen to port 8080
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
@@ -47,8 +48,17 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//call returnFiles function that takes regex of file name and direcotry to search for and return array of file names that fulfills the criteria
-	result, _ := returnFiles(&(requestParamObject.Name), &(requestParamObject.Path))
+	result, err := returnFiles(&(requestParamObject.Name), &(requestParamObject.Path))
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
 	dataObject.Data = result
+
+	if len(result) == 0 {
+		http.Error(w, "No regex files found in directory", 404)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 	//populates our return http.ResponseWriter with dataObject and in json format
@@ -73,12 +83,10 @@ func returnFiles(regexPtr *string, pathPtr *string) ([]string, error) {
 				result = append(result, path)
 
 			}
-
 			return nil
 		})
 	if err != nil {
-		fmt.Println("This path cannot be found")
-		return nil, err
+		return nil, errors.New("This path cannot be found")
 	}
 	return result, nil
 }
