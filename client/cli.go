@@ -44,6 +44,9 @@ func main() {
 	client := &http.Client{}
 	// making http post request to server with our json data
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBytes))
+	if err != nil {
+		log.Fatal(err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 	//client must close the response body when finished with it
 	resp, err := client.Do(req)
